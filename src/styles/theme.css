@@ -1,0 +1,100 @@
+/* Sokhan Colors */
+
+:root {
+  /* Palette source of truth. Each themed color is defined once as a
+     light/dark pair; the active tokens below and the `data-theme` overrides
+     in App.css reference these, so a hex value lives in exactly one place.
+     Sokhan's identity: cool paper backgrounds, deep teal accents. */
+  --light-color-text: #122320;
+  --light-color-background: #f6faf9;
+  --light-color-logo-primary: #0f9d8c;
+  --light-color-logo-stroke: #0c3a33;
+
+  --dark-color-text: #eef6f4;
+  --dark-color-background: #16211f;
+  --dark-color-logo-primary: #35d0ba;
+  --dark-color-logo-stroke: #b9efe5;
+
+  /* Semantic status colors. */
+  --light-color-warning: #d97706;
+  --light-color-error: #dc2626;
+  --dark-color-warning: #fbbf24;
+  --dark-color-error: #f87171;
+
+  /* Accent is the interactive brand color (buttons, links, highlights).
+     Surface/ink style cards and panels. */
+  --light-color-accent: #0f9d8c;
+  --light-color-accent-hover: #0c8375;
+  --light-color-surface: #ffffff;
+  --light-color-ink: #0c3a33;
+
+  --dark-color-accent: #35d0ba;
+  --dark-color-accent-hover: #4fe0cb;
+  --dark-color-surface: #1d2b28;
+  --dark-color-ink: #b9efe5;
+
+  /* Tokens that do not change between light and dark */
+  --color-background-ui: #0f766e;
+  --color-text-stroke: #f6f6f6;
+  --color-mid-gray: #808080;
+
+  /* Active palette — defaults to light, follows the OS via the media query
+     below, or is forced by `data-theme` (see the overrides below). */
+  --color-text: var(--light-color-text);
+  --color-background: var(--light-color-background);
+  --color-logo-primary: var(--light-color-logo-primary);
+  --color-logo-stroke: var(--light-color-logo-stroke);
+  --color-warning: var(--light-color-warning);
+  --color-error: var(--light-color-error);
+  --color-accent: var(--light-color-accent);
+  --color-accent-hover: var(--light-color-accent-hover);
+  --color-surface: var(--light-color-surface);
+  --color-ink: var(--light-color-ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: var(--dark-color-text);
+    --color-background: var(--dark-color-background);
+    --color-logo-primary: var(--dark-color-logo-primary);
+    --color-logo-stroke: var(--dark-color-logo-stroke);
+    --color-warning: var(--dark-color-warning);
+    --color-error: var(--dark-color-error);
+    --color-accent: var(--dark-color-accent);
+    --color-accent-hover: var(--dark-color-accent-hover);
+    --color-surface: var(--dark-color-surface);
+    --color-ink: var(--dark-color-ink);
+  }
+}
+
+/*
+ * Explicit theme override, driven by the `theme` setting via
+ * `document.documentElement.dataset.theme`. When set, the higher-specificity
+ * attribute selectors win over the `prefers-color-scheme` media query above,
+ * so a user can keep Sokhan light or dark regardless of the OS setting.
+ */
+:root[data-theme="light"] {
+  --color-text: var(--light-color-text);
+  --color-background: var(--light-color-background);
+  --color-logo-primary: var(--light-color-logo-primary);
+  --color-logo-stroke: var(--light-color-logo-stroke);
+  --color-warning: var(--light-color-warning);
+  --color-error: var(--light-color-error);
+  --color-accent: var(--light-color-accent);
+  --color-accent-hover: var(--light-color-accent-hover);
+  --color-surface: var(--light-color-surface);
+  --color-ink: var(--light-color-ink);
+}
+
+:root[data-theme="dark"] {
+  --color-text: var(--dark-color-text);
+  --color-background: var(--dark-color-background);
+  --color-logo-primary: var(--dark-color-logo-primary);
+  --color-logo-stroke: var(--dark-color-logo-stroke);
+  --color-warning: var(--dark-color-warning);
+  --color-error: var(--dark-color-error);
+  --color-accent: var(--dark-color-accent);
+  --color-accent-hover: var(--dark-color-accent-hover);
+  --color-surface: var(--dark-color-surface);
+  --color-ink: var(--dark-color-ink);
+}
