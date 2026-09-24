@@ -416,6 +416,9 @@ pub struct AppSettings {
     pub selected_output_device: Option<String>,
     #[serde(default = "default_translate_to_english")]
     pub translate_to_english: bool,
+    /// Merge می/نمی prefixes and ها/تر suffixes with a ZWNJ in Persian output.
+    #[serde(default = "default_fa_halfspace")]
+    pub fa_halfspace_enabled: bool,
     #[serde(default = "default_selected_language")]
     pub selected_language: String,
     #[serde(default = "default_overlay_position")]
@@ -531,6 +534,10 @@ fn default_hold_threshold_ms() -> u64 {
 
 fn default_always_on_microphone() -> bool {
     false
+}
+
+fn default_fa_halfspace() -> bool {
+    true
 }
 
 fn default_translate_to_english() -> bool {
@@ -927,6 +934,7 @@ pub fn get_default_settings() -> AppSettings {
         clamshell_microphone: None,
         selected_output_device: None,
         translate_to_english: false,
+        fa_halfspace_enabled: true,
         selected_language: "fa-IR".to_string(),
         overlay_position: default_overlay_position(),
         debug_mode: false,

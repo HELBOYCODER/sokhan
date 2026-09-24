@@ -824,6 +824,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
+name = "claxon"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bfbf56724aa9eca8afa4fcfadeb479e722935bb2a0900c2d37e0cc477af0688"
+
+[[package]]
 name = "clipboard-win"
 version = "5.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1737,12 +1743,6 @@ name = "fixedbitset"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d674e81391d1e1ab681a28d99df07927c6d4aa5b027d7da16ba32d1d21ecd99"
-
-[[package]]
-name = "flac-io"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35f526943b1295c2d23e08b8c299f7558f147542abf8c72ffdbf6bc9f3314352"
 
 [[package]]
 name = "flate2"
@@ -5431,17 +5431,18 @@ dependencies = [
 
 [[package]]
 name = "sokhan"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "chrono",
  "clap",
+ "claxon",
  "cpal",
  "earshot",
  "enigo",
  "env_filter",
  "ferrous-opencc",
- "flac-io",
  "futures-util",
  "gtk",
  "gtk-layer-shell",

@@ -10,6 +10,7 @@ pub use audio::{
     read_wav_samples, save_wav_file, verify_wav_file, AudioRecorder, CpalDeviceInfo, VadPolicy,
 };
 pub use lang_id::detect_output_language;
+pub use text::apply_persian_halfspace;
 pub use text::{
     apply_custom_words, normalize_transcription_output, remove_filler_words, OutputLanguageEvidence,
 };

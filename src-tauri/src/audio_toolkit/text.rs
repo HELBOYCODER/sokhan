@@ -433,9 +433,58 @@ pub fn normalize_transcription_output(text: &str) -> String {
     normalized.trim().to_string()
 }
 
+/// Conservative ZWNJ (نیم‌فاصله) pass for dictated Persian: merges the
+/// verbal prefix می/نمی, the plural ها and the comparative تر/ترین onto the
+/// previous word. Only plain single-space joins are touched.
+pub fn apply_persian_halfspace(text: &str) -> String {
+    const ZWNJ: char = '\u{200c}';
+    let is_fa = |c: char| matches!(c, '\u{0621}'..='\u{064A}' | '\u{06F0}'..='\u{06F9}');
+    let words: Vec<&str> = text.split(' ').collect();
+    let mut out: Vec<String> = Vec::with_capacity(words.len());
+    let mut i = 0;
+    while i < words.len() {
+        let w = words[i];
+        if i + 1 < words.len() {
+            let next = words[i + 1];
+            let merge = if (w == "می" || w == "نمی") && next.chars().next().is_some_and(is_fa) {
+                Some(format!("{w}{ZWNJ}{next}"))
+            } else if next == "ها" && w.chars().last().is_some_and(is_fa) {
+                Some(format!("{w}{ZWNJ}ها"))
+            } else if (next == "تر" || next == "ترین")
+                && w.chars().last().is_some_and(is_fa)
+                && w.chars().count() > 2
+            {
+                Some(format!("{w}{ZWNJ}{next}"))
+            } else {
+                None
+            };
+            if let Some(m) = merge {
+                out.push(m);
+                i += 2;
+                continue;
+            }
+        }
+        out.push(w.to_string());
+        i += 1;
+    }
+    out.join(" ")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn persian_halfspace_merges_prefixes_and_suffixes() {
+        assert_eq!(apply_persian_halfspace("می شود"), "می‌شود");
+        assert_eq!(apply_persian_halfspace("نمی دانم"), "نمی‌دانم");
+        assert_eq!(apply_persian_halfspace("کتاب ها را"), "کتاب‌ها را");
+        assert_eq!(apply_persian_halfspace("سخت تر از"), "سخت‌تر از");
+        // untouched: standalone می at end, non-Persian neighbors, short stems
+        assert_eq!(apply_persian_halfspace("این می"), "این می");
+        assert_eq!(apply_persian_halfspace("big her"), "big her");
+        assert_eq!(apply_persian_halfspace("او تر"), "او تر");
+    }
 
     /// Exercise the complete cleanup sequence with an explicitly selected
     /// language. Individual tests below predate the split between filler
@@ -812,7 +861,7 @@ mod tests {
 
     #[test]
     fn test_apply_custom_words_handles_unicode_punctuation() {
-        let text = "「Handee。」";
+        let text = "「Sokhanee。」";
         let custom_words = vec!["Sokhan".to_string()];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "「Sokhan。」");

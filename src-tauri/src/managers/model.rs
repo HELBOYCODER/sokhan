@@ -155,7 +155,7 @@ fn online_model_info() -> ModelInfo {
         supported_languages: languages,
         supports_language_selection: true,
         is_custom: false,
-        supports_streaming: false,
+        supports_streaming: true,
         supports_language_detection: false,
     }
 }

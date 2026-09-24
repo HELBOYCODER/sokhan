@@ -587,10 +587,32 @@ mod tests {
         );
 
         tokio::spawn(async move {
-            let (mut stream, _) = listener.accept().await.unwrap();
-            let mut request = [0_u8; 2048];
-            let _ = stream.read(&mut request).await.unwrap();
-            stream.write_all(response.as_bytes()).await.unwrap();
+            let (mut stream, _) = match listener.accept().await {
+                Ok(pair) => pair,
+                Err(_) => return,
+            };
+            let mut buf = [0_u8; 1024];
+            let mut request = Vec::new();
+            // Read through the end of the request headers, ignoring client
+            // disconnects; a premature socket drop here sends RST mid-send.
+            while !request.windows(4).any(|w| w == b"\r\n\r\n") {
+                match stream.read(&mut buf).await {
+                    Ok(0) | Err(_) => break,
+                    Ok(n) => request.extend_from_slice(&buf[..n]),
+                }
+            }
+            if stream.write_all(response.as_bytes()).await.is_err() {
+                return;
+            }
+            let _ = stream.flush().await;
+            // Hold the socket open until the client has read the response and
+            // closed the connection itself.
+            loop {
+                match stream.read(&mut buf).await {
+                    Ok(0) | Err(_) => break,
+                    Ok(_) => {}
+                }
+            }
         });
 
         format!("http://{address}")
@@ -621,6 +643,13 @@ mod tests {
         assert_eq!(sanitized_url_for_log(url), "https://example.com/v1/models");
     }
 
+    /// Test-only client that ignores the machine's system proxy: dev machines
+    /// behind a local VPN proxy (127.0.0.1:PORT) otherwise fail these
+    /// loopback requests with connection resets.
+    fn direct_client() -> reqwest::Client {
+        reqwest::Client::builder().no_proxy().build().unwrap()
+    }
+
     #[test]
     fn invalid_log_urls_are_not_echoed() {
         assert_eq!(
@@ -633,7 +662,9 @@ mod tests {
     async fn decode_error_does_not_echo_response_values() {
         let base_url =
             serve_one_response("200 OK", r#"{"choices":"PRIVATE TRANSCRIPTION CONTENT"}"#).await;
-        let error = reqwest::get(base_url)
+        let error = direct_client()
+            .get(base_url)
+            .send()
             .await
             .unwrap()
             .json::<ChatCompletionResponse>()
@@ -648,11 +679,13 @@ mod tests {
     #[tokio::test]
     async fn raw_error_url_is_not_reintroduced_without_a_source() {
         let base_url = serve_one_response("400 Bad Request", "bad request").await;
-        let error = reqwest::get(format!(
-            "{base_url}/private?api_key=SECRET_QUERY_TOKEN#private"
-        ))
-        .await
-        .unwrap()
+        let error = direct_client()
+            .get(format!(
+                "{base_url}/private?api_key=SECRET_QUERY_TOKEN#private"
+            ))
+            .send()
+            .await
+            .unwrap()
         .error_for_status()
         .unwrap_err();
 

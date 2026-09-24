@@ -1,22 +1,22 @@
 //! Transcription orchestration — backed by the online Google speech engine
-//! (see [`crate::google_speech`]). No local models are loaded, so "model
-//! loading" degenerates to marking the single built-in engine ready.
+//! (see [`crate::stt`]). No local models are loaded, so "model loading"
+//! degenerates to marking the single built-in engine ready.
 
 use crate::audio_toolkit::{
     apply_custom_words, detect_output_language, normalize_transcription_output,
     remove_filler_words, OutputLanguageEvidence,
 };
-use crate::google_speech;
+use crate::stt::engine::{self, SessionFeed, StreamingSession};
+use crate::stt::InterimText;
 use crate::managers::model::{ModelManager, ONLINE_MODEL_ID};
 use crate::settings::{get_settings, AppSettings};
 use anyhow::Result;
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{Arc, Mutex, MutexGuard};
 use tauri::{AppHandle, Emitter};
-use tauri_specta::Event;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ModelStateEvent {
@@ -54,21 +54,37 @@ pub struct StreamPhaseEvent {
     pub kind: Option<StreamWorkKind>,
 }
 
-/// Routes real-time audio frames to a streaming worker. The online engine
-/// transcribes in batch, so frames are dropped; the recorder holds this
-/// unconditionally.
-pub struct StreamRouter {}
+/// Routes real-time audio frames to the live speech session while recording.
+/// The recorder holds this unconditionally; with no session attached every
+/// frame costs a single relaxed check.
+pub struct StreamRouter {
+    feed: Mutex<Option<SessionFeed>>,
+}
 
 impl StreamRouter {
     fn new() -> Self {
-        Self {}
+        Self {
+            feed: Mutex::new(None),
+        }
     }
 
-    /// Forward a 16 kHz frame; no-op for the batch engine.
-    pub fn feed(&self, _frame: &[f32]) {}
+    fn attach(&self, feed: SessionFeed) {
+        *self.feed.lock().unwrap() = Some(feed);
+    }
+
+    fn detach(&self) {
+        *self.feed.lock().unwrap() = None;
+    }
+
+    /// Forward a 16 kHz frame to the live session, if one is recording.
+    pub fn feed(&self, frame: &[f32]) {
+        if let Some(feed) = self.feed.lock().unwrap().as_ref() {
+            feed.push(frame);
+        }
+    }
 
     pub fn is_open(&self) -> bool {
-        false
+        self.feed.lock().unwrap().is_some()
     }
 }
 
@@ -81,6 +97,7 @@ pub struct TranscriptionManager {
     app_handle: AppHandle,
     current_model_id: Arc<Mutex<Option<String>>>,
     router: Arc<StreamRouter>,
+    session: Arc<Mutex<Option<StreamingSession>>>,
 }
 
 impl TranscriptionManager {
@@ -90,6 +107,7 @@ impl TranscriptionManager {
             app_handle: app_handle.clone(),
             current_model_id: Arc::new(Mutex::new(None)),
             router: Arc::new(StreamRouter::new()),
+            session: Arc::new(Mutex::new(None)),
         };
         // The online engine is always available; mark it ready at startup so
         // the UI and tray see a loaded "model" immediately.
@@ -167,20 +185,70 @@ impl TranscriptionManager {
     }
 
     pub fn is_streaming(&self) -> bool {
-        false
+        self.session.lock().unwrap().is_some()
     }
 
     pub fn stream_router(&self) -> Arc<StreamRouter> {
         Arc::clone(&self.router)
     }
 
-    pub fn start_stream(&self) {}
-
-    pub fn finalize_stream(&self) -> Result<Option<String>> {
-        Ok(None)
+    /// Open a live Google session for the recording that just started. Audio
+    /// frames flow through the [`StreamRouter`]; interim text is pushed to
+    /// the overlay as [`StreamTextEvent`]s (the live subtitles).
+    pub fn start_stream(&self) {
+        let settings = get_settings(&self.app_handle);
+        let language = effective_language_for_model(
+            &settings,
+            &self.model_manager,
+            &settings.selected_model,
+        );
+        let app = self.app_handle.clone();
+        let interim = Some(Box::new(move |text: InterimText| {
+            let _ = app.emit(
+                "stream-text-event",
+                StreamTextEvent {
+                    committed: text.committed,
+                    tentative: text.tentative,
+                },
+            );
+        }) as crate::stt::engine::InterimCb);
+        let session = engine::start(&language, interim);
+        match session.feed_handle() {
+            Some(feed) => {
+                self.router.attach(feed);
+                *self.session.lock().unwrap() = Some(session);
+                debug!("Live Google speech session started (lang={language})");
+            }
+            None => warn!("speech session failed to open; falling back to batch"),
+        }
     }
 
-    pub fn cancel_stream(&self) {}
+    /// Close the live session and return its transcript. `Ok(None)` means
+    /// the caller should batch-transcribe the recorded audio instead.
+    pub fn finalize_stream(&self) -> Result<Option<String>> {
+        self.router.detach();
+        let session = self.session.lock().unwrap().take();
+        let Some(session) = session else {
+            return Ok(None);
+        };
+        match session.finish() {
+            Ok(text) if !text.trim().is_empty() => Ok(Some(text)),
+            Ok(_) => {
+                debug!("Live session produced no text; falling back to batch");
+                Ok(None)
+            }
+            Err(e) => {
+                error!("Live session failed ({e}); falling back to batch");
+                Ok(None)
+            }
+        }
+    }
+
+    pub fn cancel_stream(&self) {
+        self.router.detach();
+        // Dropping the session ends its upload and abandons results.
+        let _ = self.session.lock().unwrap().take();
+    }
 
     pub fn emit_stream_working(&self, kind: StreamWorkKind) {
         let _ = self.app_handle.emit(
@@ -221,7 +289,7 @@ impl TranscriptionManager {
             .map(|info| info.supported_languages)
             .unwrap_or_default();
 
-        let raw = google_speech::transcribe(&audio, &validated_language)?;
+        let raw = engine::transcribe(&audio, &validated_language)?;
 
         let output_language = resolve_output_language_evidence(
             &settings,
@@ -245,6 +313,14 @@ impl TranscriptionManager {
             "Online transcription completed in {:.2}s for {:.2}s of audio",
             elapsed_secs, audio_secs
         );
+
+        let filtered_result = if settings.fa_halfspace_enabled
+            && validated_language.starts_with("fa")
+        {
+            crate::audio_toolkit::apply_persian_halfspace(&filtered_result)
+        } else {
+            filtered_result
+        };
 
         if filtered_result.is_empty() {
             info!("Transcription result is empty");

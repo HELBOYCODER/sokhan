@@ -10,6 +10,9 @@
 
 ## ویژگی‌ها
 
+- **زیرنویس زنده**: متن_while_صحبت‌کردن روی صفحه نمایش داده می‌شود (استایل Live در تنظیمات Overlay).
+- **نیم‌فاصله‌ی فارسی**: می‌شود / کتاب‌ها / سخت‌تر به‌صورت خودکار اصلاح می‌شود (فعال/غیرفعال از تنظیمات Advanced).
+- بیلد **Universal**: روی Apple Silicon و Intel مک هر دو کار می‌کند.
 - بدون مدل نصبی: هیچ دانلودی لازم نیست، به‌محض نصب آماده است (فقط اینترنت لازم است).
 - پشتیبانی از فارسی (`fa-IR` به‌صورت پیش‌فرض) + ده‌ها زبان دیگر با انتخاب در تنظیمات.
 - Push-to-talk / Toggle / Hold-or-Toggle با کلید میانبر قابل تنظیم.
@@ -42,7 +45,7 @@ npx tauri dev    # محیط توسعه
 npx tauri build  # ساخت .app و .dmg در src-tauri/target/release/bundle
 ```
 
-- موتور STT: `src-tauri/src/google_speech.rs`
+- موتور STT (پروتکل + انکودر FLAC استریمینگ): `src-tauri/src/stt/`
 - لوله‌ی ضبط/Paste (ساختار اصلی Handy): `src-tauri/src/actions.rs`، `managers/audio.rs`، `clipboard.rs`
 
 ## لایسنس

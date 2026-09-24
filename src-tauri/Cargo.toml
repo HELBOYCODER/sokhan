@@ -1,6 +1,6 @@
 [package]
 name = "sokhan"
-version = "1.0.0"
+version = "1.1.0"
 description = "Sokhan"
 authors = ["cjpais"]
 edition = "2021"
@@ -55,7 +55,7 @@ rubato = "0.16.2"
 hound = "3.5.1"
 log = "0.4.25"
 env_filter = "0.1.0"
-tokio = "1.43.0"
+tokio = { version = "1.43.0", features = ["rt", "sync", "time", "macros"] }
 earshot = "1.2.2"
 enigo = "0.6.1"
 rodio = { git = "https://github.com/cjpais/rodio.git" }
@@ -72,7 +72,7 @@ isolang = "2"
 chrono = "0.4"
 rusqlite = { version = "0.37", features = ["bundled"] }
 # Online Google speech engine (Chromium Web Speech API protocol, SDA full-duplex).
-flac-io = "0.1"
+bytes = "1"
 handy-keys = "0.3.4"
 ferrous-opencc = "0.2.3"
 clap = { version = "4", features = ["derive"] }
@@ -146,8 +146,8 @@ tao-macros = { git = "https://github.com/cjpais/tao", rev = "c3bee28c1d446d95f08
 
 [dev-dependencies]
 tempfile = "3"
-# Test-only tokio features for the local socket servers exercising the
-# resumable HTTP downloader; normal builds keep the leaner feature set.
+# Independent FLAC decoder used to verify our streaming encoder's output.
+claxon = "0.4"
 tokio = { version = "1.43.0", features = ["macros", "net", "io-util", "sync", "time", "rt-multi-thread"] }
 
 [profile.release]

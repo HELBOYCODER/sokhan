@@ -991,7 +991,7 @@ e.g. 28:1 28:0 means pressing on the Enter button on a standard US keyboard.
                 .expect("system clock should be after UNIX_EPOCH")
                 .as_nanos()
         ));
-        fs::write(&script_path, "#!/bin/sh\nsleep 3 &\nexit 0\n").expect("write external script");
+        fs::write(&script_path, "#!/bin/sh\nsleep 15 &\nexit 0\n").expect("write external script");
         let mut permissions = fs::metadata(&script_path)
             .expect("read external script metadata")
             .permissions();
@@ -1007,7 +1007,7 @@ e.g. 28:1 28:0 means pressing on the Enter button on a standard US keyboard.
         });
 
         let result = receiver
-            .recv_timeout(Duration::from_secs(1))
+            .recv_timeout(Duration::from_secs(5))
             .expect("external script should return without waiting for its child");
         fs::remove_file(script_path).expect("remove external script");
         assert!(result.is_ok());
