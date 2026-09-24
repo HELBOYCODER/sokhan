@@ -215,15 +215,27 @@ fn parse_event(buf: &[u8]) -> Result<RecognitionEvent> {
 // -------------------------------------------------------------------------
 
 /// Transcribe a full 16 kHz mono clip with Google's online engine.
+///
+/// Runs the async protocol on a dedicated thread: this is called from inside
+/// Tauri's tokio runtime, and nesting a second `block_on` there aborts the
+/// task silently — which would leave the UI stuck on "transcribing" forever.
 pub fn transcribe(samples: &[f32], language: &str) -> Result<String> {
     if samples.is_empty() {
         return Ok(String::new());
     }
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|e| anyhow!("failed to start speech runtime: {e}"))?;
-    runtime.block_on(transcribe_async(samples, language))
+    let samples = samples.to_vec();
+    let language = language.to_string();
+    let worker = std::thread::spawn(move || {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| anyhow!("failed to start speech runtime: {e}"))?;
+        runtime.block_on(transcribe_async(&samples, &language))
+    });
+    match worker.join() {
+        Ok(result) => result,
+        Err(_) => Err(anyhow!("speech worker panicked")),
+    }
 }
 
 async fn transcribe_async(samples: &[f32], language: &str) -> Result<String> {
