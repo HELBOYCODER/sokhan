@@ -28,12 +28,22 @@
 
 ## نصب
 
-فایل `.dmg` را از بخش Releases همین ریپو دانلود کنید، Sokhan را به Applications ببرید و اجرا کنید.
+### macOS
+فایل `Sokhan_*_universal.dmg` را از Releases دانلود کنید، Sokhan را به Applications ببرید و اجرا کنید.
 
 پس از اولین اجرا:
 
 - دسترسی **Microphone** و **Accessibility** را در System Settings → Privacy بدهید (برای کلید میانبر و Paste).
 - در تنظیمات، زبان گفتار را انتخاب کنید (پیش‌فرض: فارسی).
+
+### Windows
+فایل `Sokhan_*_x64-setup.exe` (یا `.msi`) را از Releases دانلود و نصب کنید.
+
+- اپلیکیشن بدون امضای دیجیتال است؛ اگر SmartScreen اخطار داد، **More info → Run anyway** را بزنید.
+- کلید میانبر پیش‌فرض: `Ctrl+Space`.
+- ویندوز ممکن است اجازه Microphone را بخواهد — Accept کنید.
+
+بیلد ویندوز با GitHub Actions (workflow `windows.yml`) روی تگ‌های نسخه ساخته و به‌صورت خودکار به ریلیز پیوست می‌شود.
 
 > نکته: موتور آنلاین گوگل همان سرویسی است که مرورگر Chrome استفاده می‌کند؛ این سرویس رسمی/مستند نیست و ممکن است تغییر کند.
 
