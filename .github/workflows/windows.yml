@@ -30,7 +30,8 @@ jobs:
         run: npx tauri build
 
       - name: List bundles
-        run: dir src-tauri\target\release\bundle /s /b | findstr /i "exe msi"
+        shell: bash
+        run: find src-tauri/target/release/bundle -name "*.exe" -o -name "*.msi"
 
       - name: Upload to GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
