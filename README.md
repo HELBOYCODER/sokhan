@@ -55,7 +55,7 @@
 
 - موتور تشخیص: `SpeechRecognition` خود Safari (دیکته‌ی اپل)، نه موتور گوگل؛ متن در کادر برنامه نوشته می‌شود و با «کپی» به هر برنامه‌ای منتقل می‌کنید (iOS اجازه تایپ مستقیم در برنامه‌های دیگر نمی‌دهد).
 - نیم‌فاصله فارسی همان الگوریتم نسخه دسکتاپ است (`pwa/halfspace.js`).
-- فعال‌سازی یک‌باره: Settings ← Pages ← Source: **GitHub Actions**؛ سپس workflow با نام «PWA (GitHub Pages)» اجرا می‌شود.
+- فعال‌سازی یک‌باره (فقط یک بار لازم است): [Settings ← Pages](https://github.com/HELBOYCODER/sokhan/settings/pages) ← Source: **GitHub Actions**؛ سپس [workflow «PWA (GitHub Pages)»](https://github.com/HELBOYCODER/sokhan/actions/workflows/pwa.yml) ← **Run workflow**.
 
 > نکته: موتور آنلاین گوگل همان سرویسی است که مرورگر Chrome استفاده می‌کند؛ این سرویس رسمی/مستند نیست و ممکن است تغییر کند.
 
