@@ -1,0 +1,21 @@
+{
+  "name": "سخن — Sokhan",
+  "short_name": "سخن",
+  "description": "دیکته صوتی فارسی",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1f1b",
+  "theme_color": "#0b5f50",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

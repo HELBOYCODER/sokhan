@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b5f50" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="سخن" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="icon-512.png" />
+    <link rel="stylesheet" href="style.css" />
+    <title>سخن</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>سخن</h1>
+        <p class="sub">دیکته صوتی فارسی — Sokhan</p>
+      </header>
+
+      <div id="banner" class="banner" hidden></div>
+
+      <textarea
+        id="text"
+        placeholder="دکمه میکروفون را بزنید و صحبت کنید…"
+        aria-label="متن دیکته‌شده"
+      ></textarea>
+
+      <div class="actions">
+        <button id="copy" class="ghost" type="button">کپی</button>
+        <button id="share" class="ghost" type="button">اشتراک‌گذاری</button>
+        <button id="clear" class="ghost" type="button">پاک کردن</button>
+      </div>
+
+      <button id="mic" class="mic" type="button" aria-label="شروع ضبط">
+        <svg viewBox="0 0 24 24" width="38" height="38" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
+          />
+        </svg>
+      </button>
+      <p id="status" class="status">آماده</p>
+
+      <section class="settings">
+        <label>
+          زبان گفتار
+          <select id="lang">
+            <option value="fa-IR">فارسی</option>
+            <option value="en-US">English</option>
+            <option value="ar-SA">العربية</option>
+            <option value="tr-TR">Türkçe</option>
+          </select>
+        </label>
+        <label class="row">
+          <input id="halfspace" type="checkbox" checked />
+          نیم‌فاصله خودکار (می شود ← می‌شود)
+        </label>
+      </section>
+
+      <footer>
+        متن‌باز (MIT) —
+        <a href="https://github.com/HELBOYCODER/sokhan">github.com/HELBOYCODER/sokhan</a>
+      </footer>
+    </main>
+    <script src="halfspace.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
